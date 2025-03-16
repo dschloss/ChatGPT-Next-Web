@@ -226,22 +226,24 @@ export class ChatGPTApi implements LLMApi {
 
       // O1 not support image, tools (plugin in ChatGPTNextWeb) and system, stream, logprobs, temperature, top_p, n, presence_penalty, frequency_penalty yet.
 
+      const isNewModel = options.config.model.startsWith("new-model-prefix"); // Adjust this condition
       
-      const isNewSearchModel = options.config.model.endsWith("-search-preview");
-
-      requestPayload = {
+      const basePayload: RequestPayload = {
         messages,
         stream: options.config.stream,
         model: modelConfig.model,
-        ...(isNewSearchModel
-          ? {} // Exclude parameters for the new model
-          : {
-              temperature: !isO1OrO3 ? modelConfig.temperature : 1,
-              presence_penalty: !isO1OrO3 ? modelConfig.presence_penalty : 0,
-              frequency_penalty: !isO1OrO3 ? modelConfig.frequency_penalty : 0,
-              top_p: !isO1OrO3 ? modelConfig.top_p : 1,
-            }),
       };
+      
+      // Add optional parameters only if the model supports them
+      if (!isNewModel) {
+        basePayload.temperature = modelConfig.temperature;
+        basePayload.presence_penalty = modelConfig.presence_penalty;
+        basePayload.frequency_penalty = modelConfig.frequency_penalty;
+        basePayload.top_p = modelConfig.top_p;
+      }
+      
+      requestPayload = basePayload;
+
       /*
       requestPayload = {
         messages,
