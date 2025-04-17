@@ -225,7 +225,24 @@ export class ChatGPTApi implements LLMApi {
       }
 
       // O1 not support image, tools (plugin in ChatGPTNextWeb) and system, stream, logprobs, temperature, top_p, n, presence_penalty, frequency_penalty yet.
-
+      const isNewModel = options.config.model.startsWith("new-model-prefix"); // Adjust this condition
+      
+      const basePayload: RequestPayload = {
+        messages,
+        stream: options.config.stream,
+        model: modelConfig.model,
+      };
+      
+      // Add optional parameters only if the model supports them
+      if (!isNewModel) {
+        basePayload.temperature = modelConfig.temperature;
+        basePayload.presence_penalty = modelConfig.presence_penalty;
+        basePayload.frequency_penalty = modelConfig.frequency_penalty;
+        basePayload.top_p = modelConfig.top_p;
+      }
+      
+      requestPayload = basePayload;
+      /*
       requestPayload = {
         messages,
         stream: options.config.stream,
@@ -237,7 +254,7 @@ export class ChatGPTApi implements LLMApi {
         // max_tokens: Math.max(modelConfig.max_tokens, 1024),
         // Please do not ask me why not send max_tokens, no reason, this param is just shit, I dont want to explain anymore.
       };
-      
+      */
       // O1 使用 max_completion_tokens 控制token数 (https://platform.openai.com/docs/guides/reasoning#controlling-costs)
       if (isO1OrO3) {
         requestPayload["max_completion_tokens"] = modelConfig.max_tokens;
